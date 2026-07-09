@@ -26,10 +26,16 @@ cat-emotion-api/
 ```
 
 ## Setup
-
+1. Windows
 ```bash
 python -m venv venv
-source venv/bin/activate   # on Windows: venv\Scripts\activate
+source venv\Scripts\activate
+pip install -r requirements.txt
+```
+2. MacOS
+```bash
+python3 -m venv venv
+source venv/bin/activate
 pip install -r requirements.txt
 ```
 
@@ -38,7 +44,7 @@ pip install -r requirements.txt
 ```bash
 bash run.sh
 # or directly:
-uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+uvicorn app.main:app --host 0.0.0.0 --port 8001 --reload # Reserve 8000 for amd-pet-agentic
 ```
 
 The first request (or startup, since the model loads on startup) will take a
@@ -58,7 +64,7 @@ Upload an image file (`multipart/form-data`, field name `file`) and get back
 the predicted emotion.
 
 ```bash
-curl -X POST -F "file=@test_images/sample_cat.jpg" http://localhost:8000/predict
+curl -X POST -F "file=@test_images/sample_cat.jpg" http://localhost:8001/predict
 ```
 
 Example response:
