@@ -6,16 +6,14 @@ from fastapi import FastAPI, File, UploadFile, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.model import predict_emotion, get_model
-from app.schemas import PredictionResponse, HealthResponse, VideoPredictionResponse
+from app.schemas import UnifiedPredictionResponse, HealthResponse
 
 app = FastAPI(
     title="Cat Emotion Classification API",
-    description="Upload a cat photo and get back a predicted emotion.",
-    version="1.0.0",
+    description="Upload a cat photo or video and get back a standardized emotion prediction.",
+    version="1.1.0",
 )
 
-# Allow the Flutter app (web/mobile/desktop) to call this API.
-# Restrict allow_origins to your actual app's origin(s) in production.
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -26,8 +24,6 @@ app.add_middleware(
 
 @app.on_event("startup")
 def load_model_on_startup():
-    # Warm up / load the model once when the server starts,
-    # so the first real request isn't slow.
     get_model()
 
 
@@ -36,22 +32,31 @@ def health_check():
     return {"status": "ok", "message": "Cat Emotion Classification API is running"}
 
 
-@app.post("/predict", response_model=PredictionResponse)
+@app.post("/predict", response_model=UnifiedPredictionResponse)
 async def predict(file: UploadFile = File(...)):
     if not file.content_type or not file.content_type.startswith("image/"):
         raise HTTPException(status_code=400, detail="File must be an image")
 
     try:
+        # Read image bytes safely
         image_bytes = await file.read()
         result = predict_emotion(image_bytes)
-        return result
-    except HTTPException:
-        raise
+        
+        return {
+            "predicted_emotion": result["predicted_emotion"],
+            "confidence": result["confidence"],
+            "is_video": False,
+            "detail_breakdown": result["all_probabilities"]
+        }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     
-@app.post("/predict_video", response_model=VideoPredictionResponse)
+
+@app.post("/predict_video", response_model=UnifiedPredictionResponse)
 async def predict_video(file: UploadFile = File(...)):
+    if not file.content_type or not file.content_type.startswith("video/"):
+        raise HTTPException(status_code=400, detail="File must be a video")
+
     ext = os.path.splitext(file.filename)[1] if file.filename else ".mp4"
     
     with tempfile.NamedTemporaryFile(delete=False, suffix=ext) as temp_video:
@@ -70,13 +75,12 @@ async def predict_video(file: UploadFile = File(...)):
         while cap.isOpened():
             ret, frame = cap.read()
             if not ret:
-                break # Video is over
+                break
 
             if frame_count % frame_interval == 0:
                 success, encoded_image = cv2.imencode('.jpg', frame)
                 if success:
                     image_bytes = encoded_image.tobytes()
-                    
                     result = predict_emotion(image_bytes)
                     predictions.append(result["predicted_emotion"])
 
@@ -89,12 +93,23 @@ async def predict_video(file: UploadFile = File(...)):
 
     if not predictions:
         raise HTTPException(status_code=400, detail="Could not extract any frames from the video")
-
+    
+    total_frames = len(predictions)
     emotion_counts = Counter(predictions)
     overall_emotion = emotion_counts.most_common(1)[0][0]
+    
+    # Calculate unified confidence metric based on frame dominance
+    video_confidence = float(emotion_counts[overall_emotion] / total_frames)
+    
+    # Standardize breakdown to match percentage format
+    detail_breakdown = {
+        emotion: float(count / total_frames) 
+        for emotion, count in emotion_counts.items()
+    }
 
     return {
-        "overall_emotion": overall_emotion,
-        "frame_breakdown": dict(emotion_counts),
-        "total_frames_analyzed": len(predictions)
+        "predicted_emotion": overall_emotion,
+        "confidence": round(video_confidence, 4),
+        "is_video": True,
+        "detail_breakdown": detail_breakdown
     }

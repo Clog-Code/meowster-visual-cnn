@@ -71,13 +71,36 @@ Example response:
 
 ```json
 {
-  "predicted_emotion": "Happy",
-  "confidence": 0.87,
-  "all_probabilities": {
-    "Angry": 0.02,
-    "Happy": 0.87,
-    "Sad": 0.06,
-    "Relaxed": 0.05
+  "predicted_emotion": "sad",
+  "confidence": 0.7967,
+  "is_video": false,
+  "detail_breakdown": {
+    "angry": 0.0382,
+    "normal": 0.0688,
+    "rested": 0.0289,
+    "sad": 0.7967,
+    "surprised": 0.0674
+  }
+}
+```
+
+### `POST /predict_video`
+Upload a video file (`multipart/form-data`, field name `file`). The API processes the video by sampling frames at 1 frame per second and returns an aggregated emotion evaluation using the same unified response schema.
+
+```bash
+curl -X POST -F "file=@test_images/cat_video.mp4;type=video/mp4" http://localhost:8001/predict_video
+```
+Example response:
+
+```json
+{
+"predicted_emotion": "normal",
+  "confidence": 0.7143,
+  "is_video": true,
+  "detail_breakdown": {
+    "rested": 0.1429,
+    "normal": 0.7143,
+    "surprised": 0.1429
   }
 }
 ```
@@ -114,11 +137,11 @@ Fly.io, Render, etc.):
 
 ```bash
 docker build -t cat-emotion-api .
-docker run -p 8000:8000 cat-emotion-api
+docker run -p 8001:8001 cat-emotion-api
 ```
 
 ## Flutter integration
 
 From your Flutter app, send a `multipart/form-data` POST request to
-`http://<your-server>:8000/predict` with the image file under the field name
+`http://<your-server>:8001/predict` with the image file under the field name
 `file`, then parse the JSON response shown above.
