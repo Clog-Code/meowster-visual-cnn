@@ -9,3 +9,4 @@ jaxlib
 huggingface_hub
 pytest
 httpx
+opencv-python-headless

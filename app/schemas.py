@@ -11,3 +11,8 @@ class PredictionResponse(BaseModel):
 class HealthResponse(BaseModel):
     status: str
     message: str
+    
+class VideoPredictionResponse(BaseModel):
+    overall_emotion: str
+    frame_breakdown: Dict[str, int]
+    total_frames_analyzed: int
