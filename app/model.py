@@ -3,7 +3,7 @@ os.environ.setdefault("KERAS_BACKEND", "jax")
 
 import io
 import numpy as np
-from PIL import Image
+from PIL import Image, ImageOps
 import keras
 from huggingface_hub import hf_hub_download
 
@@ -11,8 +11,7 @@ from huggingface_hub import hf_hub_download
 MODEL_ID = "Belall87/Cat-Emotion-Classification-with-CNN"
 
 # TODO: Verify these against the actual model card / model.summary() output
-INPUT_SIZE = (224, 224)
-# INPUT_SIZE = (128, 128)
+INPUT_SIZE = (128, 128)
 CLASS_NAMES = ["angry", "normal", "rested", "sad","surprised"]
 
 _model = None  # lazy-loaded, cached singleton
