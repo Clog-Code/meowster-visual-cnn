@@ -20,23 +20,30 @@ cat-emotion-api/
 ├── .env.example
 ├── .gitignore
 ├── Dockerfile
-├── requirements.txt
+├── pyproject.toml
 ├── run.sh
 └── README.md
 ```
 
 ## Setup
-1. Windows
+
+This project uses [uv](https://docs.astral.sh/uv/) for dependency management.
+
+1. Install `uv` (if you don't have it):
+
 ```bash
-python -m venv venv
-source venv\Scripts\activate
-pip install -r requirements.txt
+# macOS / Linux
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# Windows (PowerShell)
+powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
 ```
-2. MacOS
+
+2. Install dependencies (uv creates and manages the virtual environment automatically):
+
 ```bash
-python3 -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
+uv sync
+source .venv/bin/activat
 ```
 
 ## Run the server
@@ -44,7 +51,7 @@ pip install -r requirements.txt
 ```bash
 bash run.sh
 # or directly:
-uvicorn app.main:app --host 0.0.0.0 --port 8001 --reload # Reserve 8000 for amd-pet-agentic
+uv run uvicorn app.main:app --host 0.0.0.0 --port 8001 --reload # Reserve 8000 for amd-pet-agentic
 ```
 
 The first request (or startup, since the model loads on startup) will take a
@@ -53,6 +60,7 @@ little while as it downloads the model from Hugging Face.
 ## Endpoints
 
 ### `GET /`
+
 Health check.
 
 ```json
@@ -60,6 +68,7 @@ Health check.
 ```
 
 ### `POST /predict`
+
 Upload an image file (`multipart/form-data`, field name `file`) and get back
 the predicted emotion.
 
@@ -85,11 +94,13 @@ Example response:
 ```
 
 ### `POST /predict_video`
+
 Upload a video file (`multipart/form-data`, field name `file`). The API processes the video by sampling frames at 1 frame per second and returns an aggregated emotion evaluation using the same unified response schema.
 
 ```bash
 curl -X POST -F "file=@test_images/cat_video.mp4;type=video/mp4" http://localhost:8001/predict_video
 ```
+
 Example response:
 
 ```json
@@ -109,11 +120,13 @@ Example response:
 
 1. **`INPUT_SIZE` in `app/model.py`** — must match the exact image size the
    model expects. Check the Hugging Face model card, or run:
+
    ```python
    from app.model import get_model
    model = get_model()
    print(model.input_shape)
    ```
+
 2. **`CLASS_NAMES` in `app/model.py`** — must match the actual label order
    the model was trained with. Check the model card / repo files for a
    `labels.txt`, `config.json`, or similar.
@@ -124,7 +137,7 @@ Example response:
 ## Testing
 
 ```bash
-pytest tests/
+uv run pytest tests/
 ```
 
 Put a sample image at `test_images/sample_cat.jpg` first so the prediction

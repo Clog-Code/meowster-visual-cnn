@@ -1,0 +1,20 @@
+[project]
+name = "amd-pet-visual-cnn"
+version = "0.1.0"
+description = "A FastAPI wrapper around the Cat-Emotion-Classification-with-CNN Hugging Face model"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "fastapi",
+    "uvicorn[standard]",
+    "python-multipart",
+    "pillow",
+    "numpy",
+    "keras",
+    "jax",
+    "jaxlib",
+    "huggingface_hub",
+    "pytest",
+    "httpx",
+    "opencv-python-headless",
+]
