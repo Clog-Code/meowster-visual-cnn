@@ -17,8 +17,6 @@ cat-emotion-api/
 │   └── test_predict.py
 ├── test_images/
 │   └── README.md         # put a sample_cat.jpg here for local testing
-├── .env.example
-├── .gitignore
 ├── Dockerfile
 ├── pyproject.toml
 ├── run.sh
@@ -43,7 +41,7 @@ powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | ie
 
 ```bash
 uv sync
-source .venv/bin/activat
+source .venv/bin/activate
 ```
 
 ## Run the server
@@ -51,7 +49,7 @@ source .venv/bin/activat
 ```bash
 bash run.sh
 # or directly:
-uv run uvicorn app.main:app --host 0.0.0.0 --port 8001 --reload # Reserve 8000 for amd-pet-agentic
+uv run uvicorn app.main:app --host 0.0.0.0 --port 8001 --reload
 ```
 
 The first request (or startup, since the model loads on startup) will take a
@@ -95,7 +93,7 @@ Example response:
 
 ### `POST /predict_video`
 
-Upload a video file (`multipart/form-data`, field name `file`). The API processes the video by sampling frames at 1 frame per second and returns an aggregated emotion evaluation using the same unified response schema.
+Upload a video file (`multipart/form-data`, field name `file`). The API processes the video by sampling frames at roughly 1 frame per second and returns an aggregated emotion evaluation using the same unified response schema as `/predict`.
 
 ```bash
 curl -X POST -F "file=@test_images/cat_video.mp4;type=video/mp4" http://localhost:8001/predict_video
@@ -105,13 +103,28 @@ Example response:
 
 ```json
 {
-"predicted_emotion": "normal",
+  "predicted_emotion": "normal",
   "confidence": 0.7143,
   "is_video": true,
   "detail_breakdown": {
     "rested": 0.1429,
     "normal": 0.7143,
     "surprised": 0.1429
+  }
+}
+```
+
+## Response schema
+
+Both prediction endpoints return the same shape defined in `app/schemas.py`:
+
+```json
+{
+  "predicted_emotion": "<label>",
+  "confidence": 0.0,
+  "is_video": false,
+  "detail_breakdown": {
+    "<label>": 0.0
   }
 }
 ```
