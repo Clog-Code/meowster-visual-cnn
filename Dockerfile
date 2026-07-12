@@ -23,6 +23,7 @@ COPY app/ ./app/
 EXPOSE 8001
 
 ENV PORT=8001
+ENV PYTHONUNBUFFERED=1
 ENV PATH="/app/.venv/bin:$PATH"
 
 CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8001}"]
